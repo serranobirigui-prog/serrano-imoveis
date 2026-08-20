@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Finalidade {
+  VENDA
+  LOCACAO
+}
+
+enum StatusImovel {
+  DISPONIVEL
+  VENDIDO
+  ALUGADO
+  INATIVO
+}
+
+enum TipoImovel {
+  CASA
+  APARTAMENTO
+  TERRENO
+  SOBRADO
+  CHACARA
+  SALA_COMERCIAL
+  GALPAO
+  RURAL
+  OUTRO
+}
+
+model Usuario {
+  id        String   @id @default(cuid())
+  nome      String
+  email     String   @unique
+  senhaHash String
+  createdAt DateTime @default(now())
+}
+
+model Imovel {
+  id                String       @id @default(cuid())
+  titulo            String
+  slug              String       @unique
+  tipo              TipoImovel   @default(CASA)
+  finalidade        Finalidade   @default(VENDA)
+  status            StatusImovel @default(DISPONIVEL)
+  destaque          Boolean      @default(false)
+  publicado         Boolean      @default(true)
+
+  preco             Decimal      @db.Decimal(14, 2)
+  precoCondominio   Decimal?     @db.Decimal(14, 2)
+  precoIptu         Decimal?     @db.Decimal(14, 2)
+
+  cidade            String
+  bairro            String
+  endereco          String?
+  cep               String?
+
+  quartos           Int          @default(0)
+  banheiros         Int          @default(0)
+  vagas             Int          @default(0)
+  areaConstruida    Decimal?     @db.Decimal(10, 2)
+  areaTerreno       Decimal?     @db.Decimal(10, 2)
+
+  descricao         String       @db.Text
+  caracteristicas   String?      @db.Text
+  diferenciais      String?      @db.Text
+
+  metaTitle         String?
+  metaDescription   String?
+
+  visualizacoes     Int          @default(0)
+
+  fotos             Foto[]
+
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@index([finalidade, status, publicado])
+  @@index([cidade, bairro])
+}
+
+model Foto {
+  id        String   @id @default(cuid())
+  imovelId  String
+  imovel    Imovel   @relation(fields: [imovelId], references: [id], onDelete: Cascade)
+  url       String
+  ordem     Int      @default(0)
+  principal Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([imovelId])
+}
+
+model ConfiguracaoSite {
+  id                 Int     @id @default(1)
+  nomeCorretor       String  @default("Corretor")
+  nomeImobiliaria    String  @default("Imobiliaria")
+  creci              String?
+  whatsapp           String  @default("")
+  telefone           String?
+  email              String?
+  instagram          String?
+  regiaoAtuacao      String?
+  logoUrl            String?
+  fraseApresentacao  String?
+  sobre              String? @db.Text
+  enderecoEscritorio String?
+}
